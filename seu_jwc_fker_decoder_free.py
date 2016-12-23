@@ -199,7 +199,6 @@ def Mode1(semesterNum, url):
         if total == 0:
             print u"目前没有课可以选择"
             break
-        time.sleep(3)#sleep
         times = times +1
         print u"\n第"+str(times)+u"次选课，已经成功选择"+str(success)+u"门"
         for course in courseList:

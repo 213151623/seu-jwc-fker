@@ -18,8 +18,9 @@
 
 import numpy as np
 import cv2
-import Image
-import pytesser
+import PIL
+from PIL import Image
+import pytesseract as pytesser
 
 def findPoints(img, xPos = 0):
 	''' Input a ndarray binarized image and set the x coordinate.
