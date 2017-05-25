@@ -466,7 +466,7 @@ if __name__ == "__main__":
     semester = input(u'请输入学期编号(短学期为1，秋季学期为2，春季学期为3)：')
 
     (state, text, url) = loginIn(userId,passWord)
-    while state == False or text.find('尚未开放') != -1 or text.find('验证码错误') == -1:
+    while state == False:
         print text.decode('utf-8')
         (state, text, url) = loginIn(userId, passWord)
 
