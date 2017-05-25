@@ -34,70 +34,76 @@ sys.setdefaultencoding( "utf-8" )
 
 def loginIn(userName, passWord, inputCaptcha = True):
     #设置cookie处理器
-	cj = cookielib.LWPCookieJar()
-	cookie_support = urllib2.HTTPCookieProcessor(cj)
-	opener = urllib2.build_opener(cookie_support, urllib2.HTTPHandler)  
-	urllib2.install_opener(opener)  
+    cj = cookielib.LWPCookieJar()
+    cookie_support = urllib2.HTTPCookieProcessor(cj)
+    opener = urllib2.build_opener(cookie_support, urllib2.HTTPHandler)  
+    urllib2.install_opener(opener)  
     #打开选课页面
-#	h = urllib2.urlopen('http://xk.urp.seu.edu.cn/jw_css/system/showLogin.action', timeout = 10)   # seems it is not necessary
+#   h = urllib2.urlopen('http://xk.urp.seu.edu.cn/jw_css/system/showLogin.action', timeout = 10)   # seems it is not necessary
     #获取验证码
     
-	for i in range(10):
-		try:
-			image = urllib2.urlopen('http://xk.urp.seu.edu.cn/jw_css/getCheckCode', timeout = 10)
-			break
-		except Exception, e:
-			print e
-			continue
-	else:
-		return (False, "验证码获取失败", '')
+    def getCheckCode():
+        for i in range(10):
+            try:
+                image = urllib2.urlopen('http://xk.urp.seu.edu.cn/jw_css/getCheckCode', timeout = 10)
+                break
+            except Exception, e:
+                print e
+                continue
+        else:
+            return (False, "验证码获取失败", '')
 
-	f = open('code.jpg','wb')
-	f.write(image.read())
-	f.close()
+        f = open('code.jpg','wb')
+        f.write(image.read())
+        f.close()
 
-	if inputCaptcha == True:  # manually input the capthcha
-	#读取验证码
-		code = raw_input(u'请打开我所在目录下的code.jpg，并在这里敲入里面的四位数字验证码：')
-		# code = raw_input(u'请打开我所在目录下的code.jpg，并在这里敲入里面的四位数字验证码：'.encode('gbk'))  # used for exporting to exe
-	else:  # automatically recognise the captcha
-	    (code, img) = decoder.imageFileToString('code.jpg')
-	    print u"验证码识别为： " + code
+    getCheckCode()
+
+    if inputCaptcha == True:  # manually input the capthcha
+    #读取验证码
+        code = raw_input(u'请打开我所在目录下的code.jpg，并在这里敲入里面的四位数字验证码：')
+        # code = raw_input(u'请打开我所在目录下的code.jpg，并在这里敲入里面的四位数字验证码：'.encode('gbk'))  # used for exporting to exe
+    else:  # automatically recognise the captcha
+        (code, img) = decoder.imageFileToString('code.jpg')
+        while len(code) != 4:
+            getCheckCode()
+            (code, img) = decoder.imageFileToString('code.jpg')
+        # print u"验证码识别为： " + code
 
     #构造post数据
-	posturl = 'http://xk.urp.seu.edu.cn/jw_css/system/login.action' 
-	header ={   
-		'Host' : 'xk.urp.seu.edu.cn',   
-		'Proxy-Connection' : 'keep-alive',
-		'Origin' : 'http://xk.urp.seu.edu.cn',
-		'User-Agent' : 'Mozilla/5.0 (Windows NT 6.1; WOW64; rv:14.0) Gecko/20100101 Firefox/14.0.1',
-		'Referer' : 'http://xk.urp.seu.edu.cn/jw_css/system/login.action'
-		}
-	data = {
-		'userId' : userName,
-		'userPassword' : passWord, #你的密码，  
-		'checkCode' : code,           #验证码 
-		'x' : '33',     #别管
-		'y' : '5'       #别管2
-		}
+    posturl = 'http://xk.urp.seu.edu.cn/jw_css/system/login.action' 
+    header ={   
+        'Host' : 'xk.urp.seu.edu.cn',   
+        'Proxy-Connection' : 'keep-alive',
+        'Origin' : 'http://xk.urp.seu.edu.cn',
+        'User-Agent' : 'Mozilla/5.0 (Windows NT 6.1; WOW64; rv:14.0) Gecko/20100101 Firefox/14.0.1',
+        'Referer' : 'http://xk.urp.seu.edu.cn/jw_css/system/login.action'
+        }
+    data = {
+        'userId' : userName,
+        'userPassword' : passWord, #你的密码，  
+        'checkCode' : code,           #验证码 
+        'x' : '33',     #别管
+        'y' : '5'       #别管2
+        }
     
     #post登录数据
-	(state, text) = postData(posturl,header,data)
-	url = ''
-	if state == True:
-		if (text.find('选课批次') != -1):  # a bad label; the url returned should be the best
-			print u"登录成功"
-			function = re.search(r'onclick="changeXnXq.*\)"', text); # find the function whose parameter are desired
-			function = function.group()		
-			parameters = re.search(r"'(.*)','(.*)','(.*)'\)", function) # fetch url parameters
-			url = "http://xk.urp.seu.edu.cn/jw_css/xk/runXnXqmainSelectClassAction.action?Wv3opdZQ89ghgdSSg9FsgG49koguSd2fRVsfweSUj=Q89ghgdSSg9FsgG49koguSd2fRVs&selectXn=" + parameters.group(1) + "&selectXq=" + parameters.group(2) + "&selectTime=" + parameters.group(3)
-		else:
-			state = False
-			errorMessage = re.search(r'id="errorReason".*?value="(.*?)"', text)
-			text = errorMessage.group(1)
-	else:
-		text = "网络错误，登录失败" 
-	return (state, text, url)
+    (state, text) = postData(posturl,header,data)
+    url = ''
+    if state == True:
+        if (text.find('选课批次') != -1):  # a bad label; the url returned should be the best
+            print u"登录成功"
+            function = re.search(r'onclick="changeXnXq.*\)"', text); # find the function whose parameter are desired
+            function = function.group()     
+            parameters = re.search(r"'(.*)','(.*)','(.*)'\)", function) # fetch url parameters
+            url = "http://xk.urp.seu.edu.cn/jw_css/xk/runXnXqmainSelectClassAction.action?Wv3opdZQ89ghgdSSg9FsgG49koguSd2fRVsfweSUj=Q89ghgdSSg9FsgG49koguSd2fRVs&selectXn=" + parameters.group(1) + "&selectXq=" + parameters.group(2) + "&selectTime=" + parameters.group(3)
+        else:
+            state = False
+            errorMessage = re.search(r'id="errorReason".*?value="(.*?)"', text)
+            text = errorMessage.group(1)
+    else:
+        text = "网络错误，登录失败" 
+    return (state, text, url)
 
 def selectSemester(semesterNum, url):
     print u"切换学期菜单中......"
@@ -405,8 +411,7 @@ def Mode3(semesterNum, url):
 if __name__ == "__main__":
     print u"\n\n\n\n"
     print u"===================================================================== "
-    print u"                    Seu_Jwc_Fker 东南大学选课助手\n"
-    print u"     访问 github.com/SnoozeZ/seu_jwc_fker 以了解本工具的最新动态"
+    print u"                 Seu_Jwc_Fker 东南大学选课助手变态版\n"
     print u"===================================================================== "
     print u"请选择模式："
     print u"1. 同院竞争臭表脸模式：只值守主界面本院的所有“服从推荐”课程"
@@ -434,22 +439,11 @@ if __name__ == "__main__":
         inputCaptcha = True
 
     (state, text, url) = loginIn(userId,passWord, inputCaptcha)
-    failTimes = 0
     if inputCaptcha == True and state == False:
         print text.decode('utf-8')
     else:
-        while state == False:
+        while state == False or text.find('尚未开放') != -1 or text.find('验证码错误') == -1:
             print text.decode('utf-8')
-            failTimes += 1
-            if failTimes >= 10:
-                print u'验证码识别失败达到10次'
-                break
-            if text.find('尚未开放') != -1:  # would this make it more unfair to others?
-                # # temporarily enable this
-                # failTimes = 0
-                pass
-            if text.find('验证码错误') == -1:  # maybe wrong password or something
-                break
             (state, text, url) = loginIn(userId, passWord, inputCaptcha)
 
     if state == True:
