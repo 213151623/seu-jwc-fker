@@ -446,8 +446,6 @@ def Mode3(semesterNum, url):
         if state == False:
             print u"打开课程列表页面失败"
             return
-        
-        time.sleep(3)
 
 
 if __name__ == "__main__":
